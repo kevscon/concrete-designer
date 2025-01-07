@@ -1,16 +1,15 @@
 import pandas as pd
-import os
 
 class RebarProperties:
     """
     Class to retrieve steel rebar properties.
     """
-    def __init__(self, bar_size: str, data_path: str='/data/props.csv'):
+    def __init__(self, bar_size: str, data_path: str):
         self.bar_size = bar_size
-        bar_props_df = pd.read_csv(os.getcwd() + data_path, dtype=str)
+        bar_props_df = pd.read_csv(data_path, dtype=str)
         self.prop_table = bar_props_df[bar_props_df['bar_size'] == bar_size]
         if self.prop_table.empty:
-            raise ValueError(f"Bar size '{bar_size}' not found in the properties file.")
+            raise ValueError(f"Bar size {bar_size} not found in the properties file.")
         self.bar_diameter = float(self.prop_table['bar_diameter'].values[0])
         self.bar_area = float(self.prop_table['bar_area'].values[0])
         self.bar_weight = float(self.prop_table['bar_weight'].values[0])

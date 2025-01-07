@@ -1,17 +1,37 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)
+
+# change to import
+props_path = os.getcwd() + '/data/props.csv'
 
 @app.route('/weight', methods=['POST'])
 def calc_weight():
     data = request.json
     width = float(data.get('width', 0))
     height = float(data.get('height', 0))
+    cover = float(data.get('cover', 0))
     conc_density = float(data.get('concDensity', 0))
-    weight = conc_density / 1000 * width / 12 * height / 12
-    return jsonify({'weight': round(weight, 2)})
+    bar_size = data.get('size', '#5')
+    f_c = float(data.get('f_c', 0))
+
+    import rebar_props
+    rebar = rebar_props.RebarProperties(bar_size, props_path)
+    bar_diameter = rebar.bar_diameter
+    d_c = rebar_props.calc_position(cover, bar_diameter)
+
+    from conc_analysis_classes import ConcreteBeam
+    beam = ConcreteBeam(width, height, d_c, f_c, conc_density)
+    weight = beam.w_DL
+    M_cr = beam.calc_Mcr()
+
+    return jsonify({
+        'weight': round(weight, 2),
+        'M_cr': round(M_cr, 1)
+        })
 
 @app.route('/steelArea', methods=['POST'])
 def steel_area():
@@ -21,7 +41,7 @@ def steel_area():
     spacing = float(data.get('spacing', 0))
 
     import rebar_props
-    rebar = rebar_props.RebarProperties(bar_size)
+    rebar = rebar_props.RebarProperties(bar_size, props_path)
     bar_area = rebar.bar_area
     num_bars = width / spacing
     steel_area = num_bars * bar_area
@@ -49,7 +69,7 @@ def return_stress():
     conc_density = float(data.get('concDensity', 0))
 
     import rebar_props
-    rebar = rebar_props.RebarProperties(bar_size)
+    rebar = rebar_props.RebarProperties(bar_size, props_path)
     bar_diameter = rebar.bar_diameter
     d_c = rebar_props.calc_position(cover, bar_diameter)
     bar_area = rebar.bar_area
@@ -88,7 +108,7 @@ def return_capacity():
     phi_v = float(data.get('phi_v', 0))
 
     import rebar_props
-    rebar = rebar_props.RebarProperties(bar_size)
+    rebar = rebar_props.RebarProperties(bar_size, props_path)
     bar_diameter = rebar.bar_diameter
     d_c = rebar_props.calc_position(cover, bar_diameter)
     bar_area = rebar.bar_area
@@ -105,6 +125,21 @@ def return_capacity():
         "epsilon_st": round(epsilon_st, 4),
         "phiVn": round(phi_v * V_n, 1)
         })
+
+@app.route('/design', methods=['POST'])
+def return_design():
+    data = request.json
+    width = float(data.get('width', 0))
+    height = float(data.get('height', 0))
+    f_y = float(data.get('f_y', 0))
+    phi_m = float(data.get('phi_m', 0))
+    M_u = float(data.get('M_u', 0))
+    M_cr = float(data.get('M_cr', 0))
+
+    import design_check_funcs
+    M_design = design_check_funcs.calc_design_M(M_u, M_cr, gamma_3=0.67, gamma_1=1.6)
+    A_ts = design_check_funcs.calc_dist_reinf(width, height, f_y)
+    gamma_er = design_check_funcs.calc_excess_reinf(M_design, phi_m)
 
 if __name__ == "__main__":
     app.run(debug=True)
