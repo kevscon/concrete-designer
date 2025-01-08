@@ -15,7 +15,7 @@ def calc_weight():
     height = float(data.get('height', 0))
     cover = float(data.get('cover', 0))
     conc_density = float(data.get('concDensity', 0))
-    bar_size = data.get('size', '#5')
+    bar_size = data.get('size', '')
     f_c = float(data.get('f_c', 0))
 
     import rebar_props
@@ -134,12 +134,36 @@ def return_design():
     f_y = float(data.get('f_y', 0))
     phi_m = float(data.get('phi_m', 0))
     M_u = float(data.get('M_u', 0))
-    M_cr = float(data.get('M_cr', 0))
+
+    # cover = float(data.get('cover', 0))
+    # conc_density = float(data.get('concDensity', 0))
+    # bar_size = data.get('size', '#5')
+    # f_c = float(data.get('f_c', 0))
+
+    # import rebar_props
+    # rebar = rebar_props.RebarProperties(bar_size, props_path)
+    # bar_diameter = rebar.bar_diameter
+    # d_c = rebar_props.calc_position(cover, bar_diameter)
+
+    # from conc_analysis_classes import ConcreteBeam
+    # beam = ConcreteBeam(width, height, d_c, f_c, conc_density)
+    # M_cr = beam.calc_Mcr()
+
+
+
+
+    # UDPATE
+    M_cr = 32
 
     import design_check_funcs
     M_design = design_check_funcs.calc_design_M(M_u, M_cr, gamma_3=0.67, gamma_1=1.6)
     A_ts = design_check_funcs.calc_dist_reinf(width, height, f_y)
-    gamma_er = design_check_funcs.calc_excess_reinf(M_design, phi_m)
+    gamma_er = design_check_funcs.calc_excess_reinf(M_u, phi_m * 9)
+
+    return jsonify({
+        "A_ts": round(A_ts, 2),
+        "gamma_er": round(gamma_er, 2)
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -9,7 +9,7 @@ class RebarProperties:
         bar_props_df = pd.read_csv(data_path, dtype=str)
         self.prop_table = bar_props_df[bar_props_df['bar_size'] == bar_size]
         if self.prop_table.empty:
-            raise ValueError(f"Bar size {bar_size} not found in the properties file.")
+            raise ValueError(f"Bar size '{bar_size}' not found in the properties file.")
         self.bar_diameter = float(self.prop_table['bar_diameter'].values[0])
         self.bar_area = float(self.prop_table['bar_area'].values[0])
         self.bar_weight = float(self.prop_table['bar_weight'].values[0])
