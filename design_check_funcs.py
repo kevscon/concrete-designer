@@ -45,7 +45,7 @@ def determine_gamma_3(f_y):
         gamma_3 = 0.67
     return gamma_3
 
-def calc_design_M(M_u, M_cr, gamma_3=0.67, gamma_1=1.6):
+def calc_design_M(M_u, M_cr, gamma_1=1.6, gamma_3=0.67):
     """
     Calculates design moment based on minimum reinforcement criteria.
 

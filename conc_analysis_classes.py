@@ -9,18 +9,6 @@ def calc_stress(M, y, I):
     """
     return M * 12 * y / I
 
-def calc_fr(f_c):
-    """
-    Calculates concrete modulus of rupture.
-
-    Parameters:
-    - f_c: Compressive strength of concrete (ksi).
-
-    Returns:
-    - Modulus of rupture (ksi).
-    """
-    return 0.24 * f_c ** 0.5
-
 def calc_beta1(f_c):
     """
     Calculates concrete stress block factor.
@@ -88,6 +76,13 @@ class ConcreteBeam:
         self.E_c = calc_Ec(f_c, conc_density)
         self.d = height - d_c
 
+    def calc_fr(self):
+        """
+        Returns:
+        - Modulus of rupture (ksi).
+        """
+        return 0.24 * self.f_c ** 0.5
+
     def set_Ig(self) -> float:
         """
         Returns:
@@ -107,7 +102,7 @@ class ConcreteBeam:
         Returns:
         - Cracking moment, M_cr (k-ft).
         """
-        f_r = calc_fr(self.f_c)
+        f_r = self.calc_fr()
         self.set_Sc()
         return f_r * self.S_c / 12
     
@@ -198,7 +193,7 @@ class BeamCapacity(ConcreteBeam):
         }
     
 class BeamStress(ConcreteBeam):
-    def __init__(self, width, height, d_c, f_c, conc_density, steel_area: float, E_s: float, M: float):
+    def __init__(self, width, height, d_c, f_c, conc_density, steel_area: float, M: float, E_s: float=29000):
         """
         Subclass to calculate beam stresses.
 
