@@ -65,6 +65,16 @@ def calc_beta1(f_c):
         beta_1 = max(0.85 - (f_c - 4) * 0.05, 0.65)
     return beta_1
 
+def calc_lambda(conc_density):
+    """
+    Parameters:
+    - conc_density: Concrete density (pcf).
+
+    Returns:
+    - lambda: Concrete density modification factor.
+    """
+    return min(max(7.5 * conc_density / 1000, 0.75), 1)
+
 def calc_Ec(f_c, conc_density):
     """
     Parameters:
@@ -225,6 +235,7 @@ class ConcreteAnalyzer:
         self.spacing = spacing
         self.f_c = f_c
         self.f_y = f_y
+        self.conc_density = conc_density
 
         rebar = RebarProperties(bar_size, props_path)
         self.A_s = rebar.calc_As(width, spacing)
@@ -269,8 +280,10 @@ class ConcreteAnalyzer:
         c = self.a / beta_1
         self.epsilon_t = epsilon_c * (self.d_s - c) / c
 
-    def set_Vc(self, lambda_=1, beta=2) -> float:
+    def set_Vc(self) -> float:
         """
+        Assumes simplified procedure.
+
         Parameters:
         - d_v: Effective shear depth (in).
         - lambda: Concrete density modification factor.
@@ -279,6 +292,8 @@ class ConcreteAnalyzer:
         Returns:
         - Concrete shear capacity, V_c (kips).
         """
+        lambda_ = calc_lambda(self.conc_density)
+        beta = 2
         self.V_c = 0.0316 * beta * lambda_ * self.f_c ** 0.5 * self.b * self.d_v
 
     def set_shear_capacity(self, V_s=0):
@@ -402,7 +417,7 @@ class ConcreteDesign:
 
         Parameters:
         - M_cr: Cracking moment (k-ft).
-        - gamma_1: AASHTO flexure cracking variation factor.
+        - gamma_1: AASHTO flexure cracking variation factor - 1.2 precast, 1.6 RC.
         - gamma_3: AASHTO yield strength to ultimate strength ratio factor.
 
         Returns:
@@ -431,7 +446,7 @@ class ConcreteDesign:
         Calculates maximum spacing for flexure reinforcement based on service stress.
 
         Parameters:
-        - gamma_e: AASHTO exposure factor.
+        - gamma_e: AASHTO exposure factor - 0.75 important, 1.0 other.
         - f_r: Modulus of rupture (ksi).
         - f_s: Tensile service stress in reinforcing (ksi).
         - f_y: Yield strength of steel (ksi).
