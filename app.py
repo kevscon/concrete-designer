@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from concrete_design import ConcreteAnalyzer, ConcreteDesign
+from concrete_analysis import ConcreteAnalyzer
+from concrete_design import ConcreteDesign
 
 app = Flask(__name__)
 CORS(app)
 
 def extract_data(data, keys):
-    return {key: float(data.get(key, 0)) if key not in ['size'] else data.get(key, '') for key in keys}
+    return {key: float(data.get(key, 0)) if key not in ['size', 'steelGrade'] else data.get(key, '') for key in keys}
 
 @app.route('/beam-analysis', methods=['POST'])
 def beam_analysis():
@@ -20,7 +21,7 @@ def beam_analysis():
         'cover',
         'size',
         'spacing',
-        'f_y',
+        'steelGrade',
         'f_c',
         'concDensity',
         'phi_m',
@@ -31,11 +32,11 @@ def beam_analysis():
     beam = ConcreteAnalyzer(
         values['width'], 
         values['height'], 
-        values['size'], # bar_size
-        values['spacing'], # bar_spacing
-        values['cover'], # bar_cover
+        values['size'],
+        values['spacing'],
+        values['cover'],
         values['f_c'], 
-        values['f_y'],
+        values['steelGrade'],
         values['concDensity']
         )
 
