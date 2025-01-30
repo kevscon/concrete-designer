@@ -1,33 +1,24 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from config import num_keys, select_keys
 from concrete_analysis import ConcreteAnalyzer
 from concrete_design import ConcreteDesign
 
 app = Flask(__name__)
 CORS(app)
 
-def extract_data(data, keys):
-    return {key: float(data.get(key, 0)) if key not in ['size', 'steelGrade'] else data.get(key, '') for key in keys}
+def extract_data(data, float_keys, str_keys):
+    extracted_data = {}
+    for key in float_keys:
+        extracted_data[key] = float(data.get(key, 0))
+    for key in str_keys:
+        extracted_data[key] = data.get(key, '')
+    return extracted_data
 
 @app.route('/beam-analysis', methods=['POST'])
 def beam_analysis():
     data = request.json
-    keys = [
-        'M_u',
-        'M_s',
-        'V_u',
-        'width',
-        'height',
-        'cover',
-        'size',
-        'spacing',
-        'steelGrade',
-        'f_c',
-        'concDensity',
-        'phi_m',
-        'phi_v'
-    ]
-    values = extract_data(data, keys)
+    values = extract_data(data, num_keys, select_keys)
 
     beam = ConcreteAnalyzer(
         values['width'], 
@@ -65,7 +56,8 @@ def beam_analysis():
     phi_Vn = design.phi_Vn
     design.set_min_reinf()
     gamma_er = design.calc_excess_reinf()
-    design.set_design_spacing()
+    # design.set_design_spacing()
+    design.set_design_spacing(values['crackClass'])
     design.set_checks()
 
     return jsonify({
@@ -81,7 +73,6 @@ def beam_analysis():
         "phiVn": round(phi_Vn, 1),
         'A_ts': round(A_ts, 2),
         'gamma_er': round(gamma_er, 2),
-
         'moment_capacity': design.moment_capacity,
         'shear_capacity': design.shear_capacity,
         'min_reinf': design.min_reinf,

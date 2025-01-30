@@ -108,6 +108,15 @@ class ConcreteDesign:
         gamma_er = M_design / self.phi_Mn
         return round(gamma_er, 2)
 
+    def set_crack_width(self, crack_class):
+        crack_base = 0.017
+        if crack_class == 'Class 1':
+            self.crack_width = crack_base
+        elif crack_class == 'Class 2':
+            self.crack_width = 0.75 * crack_base
+        else:
+            raise ValueError(f"'{crack_class}' not valid input.")
+
     def set_gamma_e(self, crack_width):
         """
         Determines factor for AASHTO crack control.
@@ -118,12 +127,12 @@ class ConcreteDesign:
         crack_base = 0.017
         self.gamma_e = crack_width / crack_base
 
-    def set_design_spacing(self, crack_width=0.0085):
+    def set_design_spacing(self, crack_class='Class 2'):
         """
         Calculates maximum spacing for flexure reinforcement based on service stress.
 
         Parameters:
-        - crack_width: Maximum crack width (in).
+        - crack_class: AASHTO crack class designation.
         - f_r: Modulus of rupture (ksi).
         - f_s: Tensile service stress in reinforcing (ksi).
         - f_y: Yield strength of steel (ksi).
@@ -145,7 +154,8 @@ class ConcreteDesign:
         if f_ct > 0.8 * f_r:
             beta_s = 1 + d_c / (0.7 * (h - d_c))
             f_ss = min(f_s, 0.6 * f_y)
-            self.set_gamma_e(crack_width)
+            self.set_crack_width(crack_class)
+            self.set_gamma_e(self.crack_width)
             self.s_max = 700 * self.gamma_e / (beta_s * f_ss) - 2 * d_c
         else:
             self.s_max = None
